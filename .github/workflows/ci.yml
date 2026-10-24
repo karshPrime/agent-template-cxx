@@ -1,0 +1,57 @@
+name: ci
+
+# pull_request rather than pull_request_target, so a fork's code never runs with this repository's secrets
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  # pull requests share a group per branch so newer pushes replace older runs; each commit on main
+  # gets its own group, since a pending run in a shared group is dropped and its tag would be skipped
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  version:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: VERSION holds a single vX.Y.Z version
+        run: |
+          grep -Eqx 'v[0-9]+\.[0-9]+\.[0-9]+' VERSION && [ "$(grep -c "" VERSION)" -eq 1 ] || {
+            echo "::error file=VERSION::VERSION must be one line of the form vX.Y.Z"
+            exit 1
+          }
+
+  tag:
+    if: github.event_name == 'push'
+    needs: version
+    runs-on: ubuntu-26.04
+    permissions:
+      # creates the tag named in VERSION on the merged commit
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: version
+        run: echo "tag=$(tr -d "[:space:]" < VERSION)" >> "$GITHUB_OUTPUT"
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        with:
+          script: |
+            const tag = process.env.TAG;
+            try {
+              await github.rest.git.createRef({ ...context.repo, ref: `refs/tags/${tag}`, sha: context.sha });
+              core.notice(`Tagged ${context.sha} as ${tag}`);
+            } catch (error) {
+              if (error.status !== 422 || !/already exists/i.test(error.message)) throw error;
+              core.notice(`${tag} already exists; VERSION was not bumped, so nothing was tagged`);
+            }
