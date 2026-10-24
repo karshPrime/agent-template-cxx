@@ -1,0 +1,166 @@
+/*******************************************************************************
+ * FILE NAME:    main.c
+ *
+ * PURPOSE:      Entry point for {{ project_name }}. Reads the command line,
+ *               prints the help or the version, and otherwise runs the
+ *               program.
+ *
+ * AUTHOR:{% if user_name %}       {{ user_name }}{% endif %}
+ * LICENCE:      Copyright (c) {{ year }}, Apache-2.0 licence
+ *
+ * EXTERNAL REFERENCES:
+ *     PROJECT_NAME       program name, set by the Makefile
+ *     PROJECT_VERSION    release version from VERSION, set by the Makefile
+ *
+ * ABNORMAL TERMINATION CONDITIONS, ERROR AND WARNING MESSAGES:
+ *     "unknown option"   an argument starting with '-' that the help does
+ *                        not list; exits with EXIT_FAILURE
+ ******************************************************************************/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "debug.h"
+
+#ifndef PROJECT_NAME
+#error "PROJECT_NAME is set by the Makefile"
+#endif
+
+#ifndef PROJECT_VERSION
+#error "PROJECT_VERSION is set by the Makefile from the VERSION file"
+#endif
+
+typedef enum
+{
+    OPTION_NONE,    /* not an option: an argument for the program */
+    OPTION_HELP,    /* -h or --help */
+    OPTION_VERSION, /* -v or --version */
+    OPTION_UNKNOWN  /* any other argument starting with '-' */
+} option_type;
+
+static option_type ClassifyOption(const char *argument);
+static void PrintHelp(FILE *stream);
+static void PrintVersion(void);
+static int Run(int count, const char *const arguments[]);
+
+/*******************************************************************************
+ * main: handles the first command-line argument.
+ *
+ * ARGUMENTS:
+ *     argc    int       I    number of command-line arguments
+ *     argv    char *[]  I    command-line arguments, program name first
+ *
+ * RETURNS: EXIT_SUCCESS, or EXIT_FAILURE for an unknown option.
+ ******************************************************************************/
+int main(int argc, char *argv[])
+{
+    int status = EXIT_SUCCESS; /* process exit code */
+    option_type option;        /* what the first argument asks for */
+
+    if (argc < 2)
+    {
+        option = OPTION_HELP;
+    }
+    else
+    {
+        option = ClassifyOption(argv[1]);
+    }
+
+    switch (option)
+    {
+        case OPTION_HELP:
+            PrintHelp(stdout);
+            break;
+        case OPTION_VERSION:
+            PrintVersion();
+            break;
+        case OPTION_NONE:
+            status = Run(argc - 1, (const char *const *) &argv[1]);
+            break;
+        default:
+            log_error("unknown option: %s", argv[1]);
+            PrintHelp(stderr);
+            status = EXIT_FAILURE;
+            break;
+    }
+
+    return (status);
+}
+
+/*******************************************************************************
+ * ClassifyOption: works out what a command-line argument asks for.
+ *
+ * ARGUMENTS:
+ *     argument    const char *    I    one command-line argument
+ *
+ * RETURNS: the option the argument names, or OPTION_NONE when it is not one.
+ ******************************************************************************/
+static option_type ClassifyOption(const char *argument)
+{
+    option_type option = OPTION_NONE; /* kind of argument */
+
+    if ((strcmp(argument, "-h") == 0) || (strcmp(argument, "--help") == 0))
+    {
+        option = OPTION_HELP;
+    }
+    else if ((strcmp(argument, "-v") == 0) ||
+             (strcmp(argument, "--version") == 0))
+    {
+        option = OPTION_VERSION;
+    }
+    else if (argument[0] == '-')
+    {
+        option = OPTION_UNKNOWN;
+    }
+
+    return (option);
+}
+
+/*******************************************************************************
+ * PrintHelp: prints the usage and the options.
+ *
+ * ARGUMENTS:
+ *     stream    FILE *    I    stdout when asked for, stderr after an error
+ ******************************************************************************/
+static void PrintHelp(FILE *stream)
+{
+    fprintf(stream, "Usage: %s [option] [argument...]\n", PROJECT_NAME);
+    fprintf(stream, "\n");
+    fprintf(stream, "Options:\n");
+    fprintf(stream, "  -h, --help       show this help and exit\n");
+    fprintf(stream, "  -v, --version    show the version and exit\n");
+}
+
+/*******************************************************************************
+ * PrintVersion: prints the program name and the version from VERSION.
+ ******************************************************************************/
+static void PrintVersion(void)
+{
+    printf("%s %s\n", PROJECT_NAME, PROJECT_VERSION);
+}
+
+/*******************************************************************************
+ * Run: the program itself, given every argument that is not an option.
+ *
+ * ARGUMENTS:
+ *     count        int                    I    number of arguments
+ *     arguments    const char *const []   I    the arguments
+ *
+ * RETURNS: EXIT_SUCCESS, or EXIT_FAILURE when the program fails.
+ ******************************************************************************/
+static int Run(int count, const char *const arguments[])
+{
+    int index; /* position in arguments */
+
+    debug("%d argument(s)", count);
+
+    /* TODO add code: for now the program prints its name and arguments */
+    printf("%s\n", PROJECT_NAME);
+    for (index = 0; index < count; index++)
+    {
+        printf("%s\n", arguments[index]);
+    }
+
+    return (EXIT_SUCCESS);
+}

@@ -1,0 +1,84 @@
+# {{ project_name }}
+
+{{ project_description }}
+
+
+
+[![Copier](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/copier-org/copier/master/img/badge/badge-grayscale-inverted-border-orange.json)](https://github.com/karshosphere/template-cxx)
+
+## Setup
+
+### Requirements
+
+* Add system requirements here
+
+### Build
+
+```bash
+$ make build
+```
+
+### Run
+
+```bash
+$ ./build/{{ project_slug }} --help
+$ ./build/{{ project_slug }} --version
+```
+
+`--version` prints the version from the `VERSION` file, which the Makefile compiles in.
+
+### Conditional Compilation
+
+| Flag              | Set by         | Effect                                                         |
+|-------------------|----------------|----------------------------------------------------------------|
+| `PROJECT_NAME`    | Makefile       | Program name shown by `--help` and `--version`                 |
+| `PROJECT_VERSION` | Makefile       | Version from `VERSION`; the build stops if it is missing       |
+| `NODEBUG`         | `make release` | Drops `debug()` output and the file, line and errno from logs  |
+
+
+
+## Testing
+
+### Run all tests
+
+```bash
+$ make test
+```
+
+Runs cppcheck over `src/`, then checks the built binary's `--help` and `--version` with `tests/cli.sh`.
+
+### Formatting
+
+```bash
+$ make format           # format in place
+$ make format-dry-run   # list files that need formatting
+```
+
+The layout follows the [NASA SEL C Style Guide](https://ntrs.nasa.gov/citations/19950022400) (SEL-94-003), set out in `.clang-format`. `src/debug.h` keeps its own layout and is not formatted.
+
+
+
+## Documentation
+
+* [Project Structure](docs/project_structure.md): repository layout and module responsibilities
+
+
+
+
+## Release
+
+`make release` builds the project for each release target chosen when it was generated{% if release_targets | reject('equalto', 'none') | list %} ({{ release_targets | join(', ') }}){% endif %}, writing one binary per target into `dist/`. With no targets, `dist/` is left empty.
+
+The targets are set in the `Makefile`, in `RELEASE_TARGETS`, and cross-compiled with zig by `scripts/release.sh`. Linux builds link musl statically.
+
+
+
+## Copier Update
+
+The project uses [Copier](https://copier.readthedocs.io/en/stable/) to manage its template. When the template is updated, the project can be easily brought up to date by running the following command from the project root:
+
+```bash
+$ copier update --defaults --answers-file .copier-answers.yml
+```
+When the `--defaults` option is used, copier update skips all previously answered questions and prompts only for newly introduced ones.
+
