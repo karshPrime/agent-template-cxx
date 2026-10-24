@@ -50,7 +50,7 @@ RUN groupadd --gid 1000 user \
 
 # Switch to non-root user
 USER user
-WORKDIR /workspaces/{{ _folder_name }}
+WORKDIR /home/user
 
 RUN {{ 'g++' if language == 'C++' else 'gcc' }} --version && zig version
 
