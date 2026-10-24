@@ -1,0 +1,59 @@
+FROM debian:trixie-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad AS base
+
+# Configuration
+ENV DEBIAN_FRONTEND=noninteractive
+USER root
+
+# Install dependencies
+RUN apt update && apt upgrade -y \
+    && apt install --no-install-recommends -y \
+        ca-certificates \
+        bash \
+        make \
+        {{ 'g++' if language == 'C++' else 'gcc' }} \
+        libc6-dev \
+        clang-format \
+        cppcheck \
+        curl \
+        xz-utils \
+    && apt clean \
+    && apt autoremove \
+    && rm -rf /var/lib/apt/lists/*
+
+# zig cross-compiles the release builds
+ARG ZIG_VERSION=0.17.0
+RUN arch="$(uname -m)" \
+    && case "$arch" in \
+        x86_64)  sum=1cbe9df9f27e6b78d14ccbca43b6703a404ef79ef1c463de901d7f088d4e2026 ;; \
+        aarch64) sum=9e8d11661d4ae3bd57702a3832781e23ad151dde5798e16a5ccd503f65234ff8 ;; \
+        *) echo "No zig build pinned for $arch" >&2; exit 1 ;; \
+    esac \
+    && curl -fsSL -o /tmp/zig.tar.xz "https://ziglang.org/download/$ZIG_VERSION/zig-$arch-linux-$ZIG_VERSION.tar.xz" \
+    && echo "$sum  /tmp/zig.tar.xz" | sha256sum -c - \
+    && mkdir -p /opt/zig \
+    && tar -xJf /tmp/zig.tar.xz -C /opt/zig --strip-components=1 \
+    && rm /tmp/zig.tar.xz
+ENV PATH=$PATH:/opt/zig
+
+# Create non-root user
+RUN groupadd --gid 1000 user \
+    && useradd \
+        --uid 1000 \
+        --gid user \
+        --create-home \
+        --home-dir /home/user \
+        --shell /bin/bash \
+        --skel /etc/skel \
+        user \
+    && passwd -d user \
+    && chown -R user:user /home/user
+
+# Switch to non-root user
+USER user
+WORKDIR /workspaces/{{ _folder_name }}
+
+RUN {{ 'g++' if language == 'C++' else 'gcc' }} --version && zig version
+
+# Reset frontend to interactive
+ENV DEBIAN_FRONTEND=dialog
+
