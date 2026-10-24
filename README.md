@@ -39,6 +39,21 @@ defaults:
 
 
 
+### Updating a Project
+
+Generated projects keep their Copier answers in `.copier-cxx-answers.yml` at the project root. From there:
+
+```bash
+$ copier update --defaults --answers-file .copier-cxx-answers.yml
+```
+
+Projects generated before the answers file moved keep it in `.copier-generic-project/`. Move it once before updating:
+
+```bash
+$ git mv .copier-generic-project/.copier-cxx-answers.yml .copier-cxx-answers.yml
+```
+
+
 ### Generated Code
 
 Every generated project ships `src/debug.h`, a fork of Zed Shaw's debug macros (`debug`, `log_error`, `log_warn`, `log_info`, `check` and friends), and a `main` that accepts arguments and prints `--help` and `--version`. The version is the one in the project's `VERSION` file, which the Makefile compiles in, so the binary always reports the version CI releases.
