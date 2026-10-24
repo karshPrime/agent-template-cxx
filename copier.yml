@@ -1,7 +1,7 @@
 
 _min_copier_version: "9.10.0"
 _subdirectory: template
-_answers_file: .copier-generic-project/.copier-cxx-answers.yml
+_answers_file: .copier-cxx-answers.yml
 
 # the project owns these once created
 _skip_if_exists:
