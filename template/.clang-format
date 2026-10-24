@@ -1,0 +1,18 @@
+# Layout from the NASA SEL C Style Guide (SEL-94-003)
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 80
+BreakBeforeBraces: Allman
+IndentCaseLabels: true
+SpaceBeforeParens: ControlStatements
+SpaceAfterCStyleCast: true
+PointerAlignment: Right
+# prologs are laid out by hand
+ReflowComments: false
+AlignTrailingComments: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+BreakStringLiterals: false
+SortIncludes: Never

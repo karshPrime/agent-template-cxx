@@ -1,0 +1,50 @@
+# Project tasks. CI runs format-dry-run, build, test and release.
+
+NAME := {{ project_slug }}
+VERSION := $(shell cat VERSION)
+RELEASE_TARGETS := {% for target in release_targets if target != 'none' %}{{ target }}{% if not loop.last %} {% endif %}{% endfor %}
+
+{% if language == 'C' -%}
+COMPILER := gcc
+ZIG_COMPILER := cc
+STANDARD := gnu11
+SOURCES := $(wildcard src/*.c)
+{%- else -%}
+COMPILER := g++
+ZIG_COMPILER := c++
+STANDARD := gnu++20
+SOURCES := $(wildcard src/*.cpp)
+{%- endif %}
+HEADERS := $(wildcard src/*.h)
+
+# debug.h relies on the GNU ##__VA_ARGS__ extension, hence the gnu standards
+FLAGS := -std=$(STANDARD) -Wall -Wextra -Wshadow -Werror \
+	-DPROJECT_NAME='"$(NAME)"' -DPROJECT_VERSION='"$(VERSION)"'
+
+# debug.h keeps its own layout
+FORMATTED := $(filter-out src/debug.h,$(SOURCES) $(HEADERS))
+
+.PHONY: build format format-dry-run test release
+
+build: build/$(NAME)
+
+build/$(NAME): $(SOURCES) $(HEADERS) VERSION
+	@mkdir -p build
+	$(COMPILER) $(FLAGS) -g -O0 -o $@ $(SOURCES)
+
+format:
+	clang-format -i $(FORMATTED)
+
+format-dry-run:
+	clang-format --dry-run --Werror $(FORMATTED)
+
+test: build
+	cppcheck --enable=warning,style,performance,portability --error-exitcode=1 \
+		--inline-suppr --quiet --suppress=missingIncludeSystem \
+		--std={{ 'c++20' if language == 'C++' else 'c11' }} -DPROJECT_NAME='"$(NAME)"' \
+		-DPROJECT_VERSION='"$(VERSION)"' -I src src
+	./tests/cli.sh build/$(NAME) $(VERSION)
+
+release:
+	./scripts/release.sh $(NAME) "$(RELEASE_TARGETS)" $(ZIG_COMPILER) \
+		$(FLAGS) -O2 -s -DNODEBUG $(SOURCES)

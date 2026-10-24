@@ -1,0 +1,170 @@
+/*******************************************************************************
+ * FILE NAME:    main.cpp
+ *
+ * PURPOSE:      Entry point for {{ project_name }}. Reads the command line,
+ *               prints the help or the version, and otherwise runs the
+ *               program.
+ *
+ * AUTHOR:{% if user_name %}       {{ user_name }}{% endif %}
+ * LICENCE:      Copyright (c) {{ year }}, Apache-2.0 licence
+ *
+ * EXTERNAL REFERENCES:
+ *     PROJECT_NAME       program name, set by the Makefile
+ *     PROJECT_VERSION    release version from VERSION, set by the Makefile
+ *
+ * ABNORMAL TERMINATION CONDITIONS, ERROR AND WARNING MESSAGES:
+ *     "unknown option"   an argument starting with '-' that the help does
+ *                        not list; exits with EXIT_FAILURE
+ ******************************************************************************/
+
+#include <cstdlib>
+#include <iostream>
+#include <span>
+#include <string_view>
+
+#include "debug.h"
+
+#ifndef PROJECT_NAME
+#error "PROJECT_NAME is set by the Makefile"
+#endif
+
+#ifndef PROJECT_VERSION
+#error "PROJECT_VERSION is set by the Makefile from the VERSION file"
+#endif
+
+namespace
+{
+enum class option_type
+{
+    NONE,    /* not an option: an argument for the program */
+    HELP,    /* -h or --help */
+    VERSION, /* -v or --version */
+    UNKNOWN  /* any other argument starting with '-' */
+};
+
+option_type ClassifyOption(std::string_view argument);
+void PrintHelp(std::ostream &stream);
+void PrintVersion();
+int Run(std::span<char *const> arguments);
+} // namespace
+
+/*******************************************************************************
+ * main: handles the first command-line argument.
+ *
+ * ARGUMENTS:
+ *     argc    int       I    number of command-line arguments
+ *     argv    char *[]  I    command-line arguments, program name first
+ *
+ * RETURNS: EXIT_SUCCESS, or EXIT_FAILURE for an unknown option.
+ ******************************************************************************/
+int main(int argc, char *argv[])
+{
+    int status = EXIT_SUCCESS; /* process exit code */
+    option_type option;        /* what the first argument asks for */
+
+    if (argc < 2)
+    {
+        option = option_type::HELP;
+    }
+    else
+    {
+        option = ClassifyOption(argv[1]);
+    }
+
+    switch (option)
+    {
+        case option_type::HELP:
+            PrintHelp(std::cout);
+            break;
+        case option_type::VERSION:
+            PrintVersion();
+            break;
+        case option_type::NONE:
+            status = Run(std::span<char *const>(&argv[1], argc - 1));
+            break;
+        default:
+            log_error("unknown option: %s", argv[1]);
+            PrintHelp(std::cerr);
+            status = EXIT_FAILURE;
+            break;
+    }
+
+    return (status);
+}
+
+namespace
+{
+/*******************************************************************************
+ * ClassifyOption: works out what a command-line argument asks for.
+ *
+ * ARGUMENTS:
+ *     argument    std::string_view    I    one command-line argument
+ *
+ * RETURNS: the option the argument names, or NONE when it is not one.
+ ******************************************************************************/
+option_type ClassifyOption(std::string_view argument)
+{
+    option_type option = option_type::NONE; /* kind of argument */
+
+    if ((argument == "-h") || (argument == "--help"))
+    {
+        option = option_type::HELP;
+    }
+    else if ((argument == "-v") || (argument == "--version"))
+    {
+        option = option_type::VERSION;
+    }
+    else if (argument.starts_with('-'))
+    {
+        option = option_type::UNKNOWN;
+    }
+
+    return (option);
+}
+
+/*******************************************************************************
+ * PrintHelp: prints the usage and the options.
+ *
+ * ARGUMENTS:
+ *     stream    std::ostream &    I/O    std::cout when asked for,
+ *                                        std::cerr after an error
+ ******************************************************************************/
+void PrintHelp(std::ostream &stream)
+{
+    stream << "Usage: " << PROJECT_NAME << " [option] [argument...]\n";
+    stream << "\n";
+    stream << "Options:\n";
+    stream << "  -h, --help       show this help and exit\n";
+    stream << "  -v, --version    show the version and exit\n";
+}
+
+/*******************************************************************************
+ * PrintVersion: prints the program name and the version from VERSION.
+ ******************************************************************************/
+void PrintVersion()
+{
+    std::cout << PROJECT_NAME << " " << PROJECT_VERSION << "\n";
+}
+
+/*******************************************************************************
+ * Run: the program itself, given every argument that is not an option.
+ *
+ * ARGUMENTS:
+ *     arguments    std::span<char *const>    I    the arguments
+ *
+ * RETURNS: EXIT_SUCCESS, or EXIT_FAILURE when the program fails.
+ ******************************************************************************/
+int Run(std::span<char *const> arguments)
+{
+    debug("%zu argument(s)", arguments.size());
+
+    /* TODO add code: for now the program prints its name and arguments */
+    std::cout << PROJECT_NAME << "\n";
+    for (const char *argument : arguments)
+    {
+        std::cout << argument << "\n";
+    }
+
+    return (EXIT_SUCCESS);
+}
+} // namespace
