@@ -39,6 +39,27 @@ defaults:
 
 
 
+### Updating a Project
+
+Generated projects keep their Copier answers in `.copier-cxx-answers.yml` at the project root. From there:
+
+```bash
+$ copier update --defaults --answers-file .copier-cxx-answers.yml
+```
+
+Projects generated before the answers file moved keep it in `.copier-generic-project/`. Move it once before updating:
+
+```bash
+$ git mv .copier-generic-project/.copier-cxx-answers.yml .copier-cxx-answers.yml
+```
+
+Projects generated before 2.0.0 hold `vX.Y.Z` in `VERSION`. Remove the leading `v` once when updating, or the shared CI's version check fails:
+
+```bash
+$ sed -i 's/^v//' VERSION
+```
+
+
 ### Generated Code
 
 Every generated project ships `src/debug.h`, a fork of Zed Shaw's debug macros (`debug`, `log_error`, `log_warn`, `log_info`, `check` and friends), and a `main` that accepts arguments and prints `--help` and `--version`. The version is the one in the project's `VERSION` file, which the Makefile compiles in, so the binary always reports the version CI releases.
@@ -48,14 +69,14 @@ Code follows the [NASA SEL C Style Guide](https://ntrs.nasa.gov/citations/199500
 
 ### Versioning and CI
 
-The template's release version lives in `VERSION` as `vX.Y.Z`. Bump it in every change that should be released:
+The template's release version lives in `VERSION` as a plain `X.Y.Z`, without a leading `v`. Bump it in every change that should be released:
 * `Z` for minor fixes.
 * `Y` for minor features and chores.
 * `X` for breaking changes, such as renamed questions or moved files that affect `copier update` in existing projects.
 
 GitHub Actions (`.github/workflows/ci.yml`) runs two jobs:
-* **version:** on every pull request and push to `main`, checks that `VERSION` holds a single `vX.Y.Z` line.
-* **tag:** on push to `main`, tags the merged commit with the version in `VERSION`, so existing projects can move to it with `copier update`. If the tag already exists, nothing is tagged.
+* **version:** on every pull request and push to `main`, checks that `VERSION` holds a single `X.Y.Z` line.
+* **tag:** on push to `main`, tags the merged commit `v` plus the version in `VERSION`, such as `v1.2.3`, so existing projects can move to it with `copier update`. If the tag already exists, nothing is tagged.
 
 The workflow is read-only apart from the tag job, which needs write access to create the tag. It runs on `pull_request`, never `pull_request_target`, so code from a fork never runs with this repository's credentials. Actions are pinned to commit SHAs, and Renovate (`renovate.json`, extending the shared settings in template-github-ci) proposes updates to them weekly. Minor, patch and digest updates come as one grouped pull request and majors on their own; Renovate never touches `VERSION`, so bump it on the pull request before merging.
 

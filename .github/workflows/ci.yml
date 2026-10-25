@@ -22,10 +22,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: VERSION holds a single vX.Y.Z version
+      - name: VERSION holds a single X.Y.Z version
         run: |
-          grep -Eqx 'v[0-9]+\.[0-9]+\.[0-9]+' VERSION && [ "$(grep -c "" VERSION)" -eq 1 ] || {
-            echo "::error file=VERSION::VERSION must be one line of the form vX.Y.Z"
+          grep -Eqx '[0-9]+\.[0-9]+\.[0-9]+' VERSION && [ "$(grep -c "" VERSION)" -eq 1 ] || {
+            echo "::error file=VERSION::VERSION must be one line of the form X.Y.Z, without a leading v"
             exit 1
           }
 
@@ -41,7 +41,7 @@ jobs:
         with:
           persist-credentials: false
       - id: version
-        run: echo "tag=$(tr -d "[:space:]" < VERSION)" >> "$GITHUB_OUTPUT"
+        run: echo "tag=v$(tr -d "[:space:]" < VERSION)" >> "$GITHUB_OUTPUT"
       - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           TAG: ${{ steps.version.outputs.tag }}
