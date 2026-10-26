@@ -142,7 +142,7 @@ _tasks:
     when: "{{ _copier_operation == 'copy' }}"
   - command: 'git add --all'
     when: "{{ _copier_operation == 'copy' }}"
-  - command: 'git commit -m "Copy from generic template" -m "https://github.com/karnull/templates"'
+  - command: 'git commit -m "Copy from generic template" -m "https://github.com/karshosphere/template-cxx"'
     when: "{{ _copier_operation == 'copy' }}"
   - command: 'git remote add origin git@github.com:{{ github_user }}/{{ project_slug }}.git'
     when: "{{ _copier_operation == 'copy' }}"
