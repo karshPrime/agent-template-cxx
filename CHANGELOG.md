@@ -8,3 +8,4 @@
 * fix/dockerfile-workdir: copier update no longer conflicts on the Dockerfile; existing projects resolve it once on their next update.
 * feature/root-answers-file: generated projects keep their Copier answers in `.copier-cxx-answers.yml` at the root rather than in `.copier-generic-project/`; existing projects move the file once before their next update.
 * feature/plain-version: VERSION holds a plain X.Y.Z here and in generated projects, with CI adding the v for tags; existing projects remove the v from VERSION once.
+* docs/readme: a shorter README with the right copy command, gh:karshosphere/template-cxx, and the first commit of a new project links to this template.
