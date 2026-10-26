@@ -2,6 +2,8 @@
 
 ## Added
 
+* 2.0.2
+   * the changelog lists changes under the version they were released in, newest first
 * 2.0.1
    * a shorter README with the right copy command, gh:karshosphere/template-cxx
    * the first commit of a new project links to this template
