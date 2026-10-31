@@ -5,7 +5,6 @@ _answers_file: .copier-cxx-answers.yml
 
 # the project owns these once created
 _skip_if_exists:
-  - VERSION
   - renovate.json
 
 #===============================================================================

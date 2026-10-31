@@ -25,14 +25,14 @@ $ ./build/{{ project_slug }} --help
 $ ./build/{{ project_slug }} --version
 ```
 
-`--version` prints the version from the `VERSION` file, which the Makefile compiles in.
+`--version` prints the version the Makefile compiles in: the one CI is releasing, or `git describe --tags` for a local build, or `0.0.0` with no tags or no git.
 
 ### Conditional Compilation
 
 | Flag              | Set by         | Effect                                                         |
 |-------------------|----------------|----------------------------------------------------------------|
 | `PROJECT_NAME`    | Makefile       | Program name shown by `--help` and `--version`                 |
-| `PROJECT_VERSION` | Makefile       | Version from `VERSION`; the build stops if it is missing       |
+| `PROJECT_VERSION` | Makefile       | Version the Makefile works out; see Run above                  |
 | `NODEBUG`         | `make release` | Drops `debug()` output and the file, line and errno from logs  |
 
 
